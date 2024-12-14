@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Air Quality Dashboard</title>
+    <link rel="stylesheet" href="results.css">
+</head>
+<body>
+    
+    <nav class="navbar">
+        <ul class="nav-links">
+            <li><a href="HomePage.html">Home</a></li>
+            <li><a href="HelpPage.html">Help Page</a></li>
+            <li><a href="AboutUs".html">About Us</a></li>
+        </ul>
+    </nav>
+
+    
+    <div class="container">
+        <div class="search-container">
+            <input
+                type="text"
+                placeholder="Enter Location"
+                id="location-search"
+                class="search-bar"
+                oninput="showSuggestions()"
+            >
+            <div class="suggestions" id="suggestions">
+                <ul>
+                    <li onclick="selectSuggestion('Houston')">Houston</li>
+                    <li onclick="selectSuggestion('Bowie')">Bowie</li>
+                    <li onclick="selectSuggestion('Washington D.C.')">Washington D.C.</li>
+                </ul>
+            </div>
+        </div>
+
+        
+        <div class="map-container">
+            <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRMzqHaJrFzUwB2GaZuurUZyscSxUmuJqvSCA&s" alt="Map Placeholder">
+        </div>
+
+        
+        <div class="pollutants">
+            <h3>Pollutants</h3>
+            <label><input type="checkbox" id="co2" checked> CO2</label>
+            <label><input type="checkbox" id="no2" checked> NO2</label>
+            <label><input type="checkbox" id="co"> CO</label>
+            <label><input type="checkbox" id="pm25" checked> PM2.5</label>
+            <button onclick="selectAllPollutants()">Select All</button>
+        </div>
+
+        
+        <div class="calendar-section">
+            <h3>Select Start & End Dates</h3>
+            <input type="date" id="start-date">
+            <input type="date" id="end-date">
+        </div>
+
+        
+        <div class="data-section">
+            <div class="chart-container">
+                <div class="graph-outline">
+                    <div class="axis-x">X</div>
+                    <div class="axis-y">Y</div>
+                </div>
+            </div>
+            <div class="dial-container">
+                <div class="dial">
+                    <span class="dial-value">75</span>
+                </div>
+                <p>Air Quality Index</p>
+            </div>
+        </div>
+
+        
+        <div class="actions">
+            <select>
+                <option>Past Searches</option>
+            </select>
+            <button>Search</button>
+        </div>
+
+        <footer>
+            <p>Powered By: OpenAQ, OpenWeatherMap</p>
+        </footer>
+    </div>
+
+    <script src="results.js"></script>
+</body>
+</html>

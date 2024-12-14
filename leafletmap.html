@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Air Quality Map with Heatmaps</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.Default.css" />
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet.markercluster/dist/leaflet.markercluster.js"></script>
+    <script src="leaflet-heat.js"></script>
+    <style>
+        /* Map container styling */
+        #map {
+            height: 100vh;
+            width: 100%;
+        }
+
+        /* Checkbox container styling */
+        .checkbox-container {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            z-index: 1000;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        .checkbox-container input {
+            margin-right: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div id="map"></div>
+    <div class="checkbox-container">
+        <label><input type="checkbox" id="no2Checkbox" /> Nitrogen Dioxide (NO2)</label><br>
+        <label><input type="checkbox" id="coCheckbox" /> Carbon Monoxide (CO)</label><br>
+        <label><input type="checkbox" id="o3Checkbox" /> Ozone (O3)</label><br>
+        <label><input type="checkbox" id="so2Checkbox" /> Sulfur Dioxide (SO2)</label>
+    </div>
+
+    <script>
+        // Initialize the map centered on the United States
+        const map = L.map('map').setView([37.0902, -95.7129], 4); // USA coordinates and zoom level
+
+        // Add a base map layer (e.g., OpenStreetMap)
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '© OpenStreetMap'
+        }).addTo(map);
+
+        // OpenWeatherMap API integration
+        const apiKey = "16887fafcd130b5e54f78f627dbbb936"; // Replace with your OpenWeatherMap API key
+
+        // Pollutant ranges
+        const pollutantRanges = {
+            no2: 200,
+            co: 15400,
+            o3: 180,
+            so2: 350
+        };
+
+        // Heatmap layers
+        const heatLayers = {
+            no2: L.heatLayer([], { radius: 15, minOpacity: 0.25, blur: 15, gradient: { 0.2: 'cyan', 0.4: 'blue', 0.6: 'lime', 0.8: 'yellow', 1: 'red' } }),
+            co: L.heatLayer([], { radius: 15, minOpacity: 0.25, blur: 15, gradient: { 0.2: 'cyan', 0.4: 'blue', 0.6: 'lime', 0.8: 'yellow', 1: 'red' } }),
+            o3: L.heatLayer([], { radius: 15, minOpacity: 0.25, blur: 15, gradient: { 0.2: 'cyan', 0.4: 'blue', 0.6: 'lime', 0.8: 'yellow', 1: 'red' } }),
+            so2: L.heatLayer([], { radius: 15, minOpacity: 0.25, blur: 15, gradient: { 0.2: 'cyan', 0.4: 'blue', 0.6: 'lime', 0.8: 'yellow', 1: 'red' } })
+        };
+
+        // Checkbox event listeners
+        document.getElementById('no2Checkbox').addEventListener('change', function () {
+            this.checked ? map.addLayer(heatLayers.no2) : map.removeLayer(heatLayers.no2);
+        });
+
+        document.getElementById('coCheckbox').addEventListener('change', function () {
+            this.checked ? map.addLayer(heatLayers.co) : map.removeLayer(heatLayers.co);
+        });
+
+        document.getElementById('o3Checkbox').addEventListener('change', function () {
+            this.checked ? map.addLayer(heatLayers.o3) : map.removeLayer(heatLayers.o3);
+        });
+
+        document.getElementById('so2Checkbox').addEventListener('change', function () {
+            this.checked ? map.addLayer(heatLayers.so2) : map.removeLayer(heatLayers.so2);
+        });
+
+        // Fetch the city-state coordinate data from the external JSON file
+        fetch('cityStatetoLatLong.json')
+            .then(response => response.json())
+            .then(cities => {
+                cities.forEach(city => {
+                    const { city: cityName, state, latitude, longitude } = city;
+                    const weatherUrl = `https://api.openweathermap.org/data/2.5/air_pollution?lat=${latitude}&lon=${longitude}&appid=${apiKey}`;
+
+                    fetch(weatherUrl)
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data) {
+                                const components = data.list[0].components;
+                                Object.entries(heatLayers).forEach(([pollutant, layer]) => {
+                                    const value = components[pollutant] || 0;
+                                    const intensity = Math.min(value / pollutantRanges[pollutant], 1);
+                                    layer.addLatLng([latitude, longitude, intensity]);
+                                });
+                            }
+                        })
+                        .catch(error => console.error('Error fetching air quality data:', error));
+                });
+            })
+            .catch(error => console.error('Error fetching city data:', error));
+    </script>
+</body>
+</html>

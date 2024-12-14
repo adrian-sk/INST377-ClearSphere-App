@@ -5,6 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Air Quality Dashboard</title>
     <link rel="stylesheet" href="results.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <style>
+        #map {
+            height: 400px;
+            width: 100%;
+            border: 1px solid #ccc;
+        }
+    </style>
 </head>
 <body>
     
@@ -36,17 +46,15 @@
         </div>
 
         
-        <div class="map-container">
-            <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRMzqHaJrFzUwB2GaZuurUZyscSxUmuJqvSCA&s" alt="Map Placeholder">
-        </div>
+        <div id="map"></div>
 
         
         <div class="pollutants">
-            <h3>Pollutants</h3>
-            <label><input type="checkbox" id="co2" checked> CO2</label>
-            <label><input type="checkbox" id="no2" checked> NO2</label>
-            <label><input type="checkbox" id="co"> CO</label>
-            <label><input type="checkbox" id="pm25" checked> PM2.5</label>
+            <h3>Select Pollutants</h3>
+            <label><input type="checkbox" id="co2" value="co2"> CO2</label>
+            <label><input type="checkbox" id="no2" value="no2"> NO2</label>
+            <label><input type="checkbox" id="co" value="co"> CO</label>
+            <label><input type="checkbox" id="pm25" value="pm2_5"> PM2.5</label>
             <button onclick="selectAllPollutants()">Select All</button>
         </div>
 
@@ -58,19 +66,16 @@
         </div>
 
         
-        <div class="data-section">
-            <div class="chart-container">
-                <div class="graph-outline">
-                    <div class="axis-x">X</div>
-                    <div class="axis-y">Y</div>
-                </div>
+        <div class="chart-container">
+            <canvas id="pollutant-chart"></canvas>
+        </div>
+
+
+        <div class="dial-container">
+            <div class="dial">
+                <span class="dial-value">75</span>
             </div>
-            <div class="dial-container">
-                <div class="dial">
-                    <span class="dial-value">75</span>
-                </div>
-                <p>Air Quality Index</p>
-            </div>
+            <p>Air Quality Index</p>
         </div>
 
         
@@ -78,7 +83,7 @@
             <select>
                 <option>Past Searches</option>
             </select>
-            <button>Search</button>
+            <button class="button-66" role="button" onclick="fetchAirQualityData()">Generate Graph</button>
         </div>
 
         <footer>
@@ -87,5 +92,12 @@
     </div>
 
     <script src="results.js"></script>
+    <script>
+        var map = L.map('map').setView([39.82, -98.58], 5);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+    </script>
 </body>
 </html>

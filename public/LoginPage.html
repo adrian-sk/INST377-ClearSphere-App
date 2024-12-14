@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Login Page</title>
+    <link rel="stylesheet" href="main.css">
+    <script type="text/javascript" src="Users.js" defer></script>
+</head>
+
+<body>
+    <nav>
+        <ul class="nav">
+            <li><a href="HomePage.html">Home</a></li>
+            <li><a href="Results.html">Results</a></li> <!-- IGNORE THIS PAGE FOR NOW -->
+            <li><a href="AboutUs.html">About Us</a></li>
+            <li><a href="HelpPage.html">Help</a></li>
+        </ul>
+    </nav>
+
+    <div class="image-container">
+        <img
+            src="https://static.vecteezy.com/system/resources/thumbnails/001/838/945/small_2x/world-planet-earth-isolated-icon-free-vector.jpg">
+        <div class="text-container">ClearSphere</div>
+        <div class="input-container">
+            <form name="signInForm" onsubmit="checkUser(); return false;">
+                <label for="username">Username:</label>
+                <input type="text" id="username" placeholder="Username" required>
+                <br>
+                <label for="password">Password:</label>
+                <input type="text" id="password" placeholder="Password"required
+                <br>
+                <br>
+                <button type="submit">Sign In</button>
+                <br>
+                <h4>Don't have an account?</h4>
+            </form>
+            <a href="CreateAccountPage.html">
+                <button>Create Account</button>
+            </a>
+        </div>
+    </div>
+</body>
+
+</html>

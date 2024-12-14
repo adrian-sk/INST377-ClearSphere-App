@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Create Account Page</title>
+    <link rel="stylesheet" href="main.css">
+    <script type="text/javascript" src="Users.js" defer></script>
+</head>
+
+<body>
+    <div class="image-container">
+        <img
+            src="https://static.vecteezy.com/system/resources/thumbnails/001/838/945/small_2x/world-planet-earth-isolated-icon-free-vector.jpg">
+        <div class="text-container">ClearSphere</div>
+        <div class="input-container">
+            <form name="createAccountForm" onsubmit="createUser(); return false;">
+                <label for="firstname">First Name:</label>
+                <input type="text" id="firstname" placeholder="First Name">
+                <label for="username">Username:</label>
+                <input type="text" id="username" placeholder="Username">
+                <br>
+                <label for="password">Password:</label>
+                <input type="text" id="password" placeholder="Password">
+                <br>
+                <br>
+                <button type="submit">Create Account</button>
+            </form>
+        </div>
+    </div>
+</body>
+
+</html>

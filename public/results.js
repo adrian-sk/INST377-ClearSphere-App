@@ -1,5 +1,5 @@
-var apiKey = "16887fafcd130b5e54f78f627dbbb936"; 
-let chart; 
+var apiKey = "16887fafcd130b5e54f78f627dbbb936";
+let chart;
 
 function showSuggestions() {
     var input = document.getElementById('location-search').value.trim();
@@ -34,27 +34,14 @@ function selectAllPollutants() {
     });
 }
 
-async function getWeatherData(lat, long, apiKey) {
-    var date;
-    const data = await fetch(`https://api.openweathermap.org/data/2.5/air_pollution?lat=${lat}&lon=${long}&appid=${apiKey}`)
-        .then((res) => res.json())
-        .then(response => {
-            if(response){
-                date = response.list[0].dt; 
-            }
-        });
-    
-    return date;
-}
-
-async function getDate(lat, long, apiKey){
-    const data = await getWeatherData(lat, long, apiKey);
-    console.log(data);
-}
-
-async function getSearchDate() {
-    const location = document.getElementById('location-search').value;
+async function getSearchInfo() {
+    const id = getUserId();
+    const users = await getUsers();
+    var start;
+    var end;
     const apiKey = "16887fafcd130b5e54f78f627dbbb936";
+    var selected = document.querySelector('#pastDropdown');
+    var location = selected.value;
 
     var lat;
     var long;
@@ -67,17 +54,33 @@ async function getSearchDate() {
                 if (location == response[i].city) {
                     lat = response[i].latitude;
                     long = response[i].longitude;
-                    console.log(latitude);
-                    console.log(longitude);
+                    console.log(lat);
+                    console.log(long);
                     break;
                 }
             }
         })
 
-    const date = getWeatherData(lat, long, apiKey);
-    return date;
-    
+    var selectedPollutants = Array.from(
+        document.querySelectorAll('.pollutants input:checked')
+    ).map(input => input.value);
 
+    if (selectedPollutants.length === 0) {
+        alert("Please select at least one pollutant!");
+        return;
+    }
+
+    var pastArray = users[id].past_searches;
+    for (let i = 0; i < pastArray.length; i++) {
+        if (location == pastArray[i]) {
+            start = users[id].start_date[i];
+            end = users[id].end_date[i];
+            break;
+        }
+    }
+
+    var airQualityData = await fetchPollutantData(lat, long, selectedPollutants, start, end);
+    updateChart(airQualityData, selectedPollutants, start, end);
 }
 
 function getUserId() {
@@ -90,20 +93,24 @@ async function updatePastSearches() {
     const id = getUserId();
     const users = await getUsers();
     const usersArray = users[id].past_searches;
-    const dateArray = users[id].search_date;
+    const startArray = users[id].start_date;
+    const endArray = users[id].end_date;
     const location = document.getElementById('location-search').value;
     const select = document.getElementById('pastDropdown');
-    const date = await getSearchDate();
+    const start = document.getElementById('start-date').value;
+    const end = document.getElementById('end-date').value;
 
     usersArray.push(location);
-    dateArray.push(date);
+    startArray.push(start);
+    endArray.push(end);
 
     await fetch('http://localhost:3000/update', {
         method: 'PUT',
         body: JSON.stringify({
             id: getUserId(),
             past_searches: usersArray,
-            search_date: dateArray,
+            start_date: startArray,
+            end_date: endArray,
         }),
         headers: {
             'Content-Type': 'application/json',
@@ -114,8 +121,10 @@ async function updatePastSearches() {
     for (let i = 0; i < usersArray.length; i++) {
         const pastSearch = document.createElement("option");
         const option = usersArray[i];
+        const sDate = startArray[i];
+        const eDate = endArray[i];
 
-        pastSearch.textContent = option;
+        pastSearch.textContent = option + " From: " + sDate + " to " + eDate;
         pastSearch.value = option;
         select.appendChild(pastSearch);
     }
@@ -163,6 +172,7 @@ async function fetchAirQualityData() {
 
         var airQualityData = await fetchPollutantData(lat, lon, selectedPollutants, startDate, endDate);
 
+        updatePastSearches();
         updateChart(airQualityData, selectedPollutants, startDate, endDate);
     } catch (error) {
         console.error("Error fetching data:", error);
@@ -172,8 +182,8 @@ async function fetchAirQualityData() {
 
 // Get air quality based on lat/lon and dates
 async function fetchPollutantData(lat, lon, pollutants, startDate, endDate) {
-    var startTime = new Date(startDate).getTime() / 1000; 
-    var endTime = new Date(endDate).getTime() / 1000; 
+    var startTime = new Date(startDate).getTime() / 1000;
+    var endTime = new Date(endDate).getTime() / 1000;
 
     var response = await fetch(
         `https://api.openweathermap.org/data/2.5/air_pollution/history?lat=${lat}&lon=${lon}&start=${startTime}&end=${endTime}&appid=${apiKey}`
@@ -181,7 +191,7 @@ async function fetchPollutantData(lat, lon, pollutants, startDate, endDate) {
     var data = await response.json();
 
     var timeSeries = data.list.map(entry => ({
-        date: new Date(entry.dt * 1000).toISOString().split("T")[0], 
+        date: new Date(entry.dt * 1000).toISOString().split("T")[0],
         components: entry.components,
     }));
 

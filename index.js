@@ -63,11 +63,12 @@ app.put('/update', async (req, res) => {
 
     const id = req.body.id
     const location = req.body.location
-    const date = req.body.date;
+    const start = req.body.start
+    const end = req.body.end
 
     const { data, error } = await supabase
         .from('users')
-        .update({ past_searches: location, search_date: date, })
+        .update({ past_searches: location, start_date: start, end_date:end, })
         .eq('id', id)
         .select()
 

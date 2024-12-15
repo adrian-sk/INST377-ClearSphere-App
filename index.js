@@ -44,6 +44,9 @@ app.post('/user', async (req, res) => {
         user_first_name: firstName,
         username: userName,
         user_password: password,
+        past_searches: [],
+        start_date: [],
+        end_date: [],
     })
         .select()
 
@@ -59,19 +62,35 @@ app.post('/user', async (req, res) => {
 
 app.put('/update', async (req, res) => {
     console.log('Updating user')
-    console.log(req.body)
+    console.log('Request body', req.body)
 
     const id = req.body.id
     const location = req.body.location
     const start = req.body.start
     const end = req.body.end
+    //const { id, location, start, end} = req.body;
+
+    console.log('Locations Array', location);
+
+   /* const { data, error } = await supabase
+        .from('users')
+        .update({ past_searches: ['simple_test'] })
+        .eq('id', id)
+        .select();
+    */
 
     const { data, error } = await supabase
         .from('users')
-        .update({ past_searches: location, start_date: start, end_date:end, })
+        .update({ 
+            past_searches: location, 
+            start_date: start, 
+            end_date: end,
+        })
         .eq('id', id)
         .select()
+    
 
+    console.log('Supabase: ', { data, error });
     if (error) {
         console.log('Error:', error)
         res.send(error)

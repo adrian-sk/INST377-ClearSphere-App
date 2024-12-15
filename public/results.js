@@ -36,6 +36,7 @@ function selectAllPollutants() {
 
 async function getSearchInfo() {
     const id = getUserId();
+    const uid = id - 1
     const users = await getUsers();
     var start;
     var end;
@@ -70,11 +71,11 @@ async function getSearchInfo() {
         return;
     }
 
-    var pastArray = users[id].past_searches;
+    var pastArray = users[uid].past_searches;
     for (let i = 0; i < pastArray.length; i++) {
         if (location == pastArray[i]) {
-            start = users[id].start_date[i];
-            end = users[id].end_date[i];
+            start = users[uid].start_date[i];
+            end = users[uid].end_date[i];
             break;
         }
     }
@@ -86,49 +87,80 @@ async function getSearchInfo() {
 function getUserId() {
     const userId = sessionStorage.getItem('userId');
     console.log('Id: ', userId);
-    return userId;
+    return parseInt(userId);
 }
 
-async function updatePastSearches() {
+async function updatePastSearches(location, start, end) {
     const id = getUserId();
+    const uid = id - 1;
     const users = await getUsers();
-    const usersArray = users[id].past_searches;
-    const startArray = users[id].start_date;
-    const endArray = users[id].end_date;
-    const location = document.getElementById('location-search').value;
-    const select = document.getElementById('pastDropdown');
-    const start = document.getElementById('start-date').value;
-    const end = document.getElementById('end-date').value;
+    console.log(users)
+    console.log(users[uid].past_searches);
+    var usersArray = users[uid].past_searches;
+    var startArray = users[uid].start_date;
+    var endArray = users[uid].end_date;
+    //const location = document.getElementById('location-search').value;
+    //const select = document.getElementById('pastDropdown');
+    //const start = document.getElementById('start-date').value;
+    //const end = document.getElementById('end-date').value;
+
+    if (usersArray === null) {
+        usersArray = [];
+        startArray = [];
+        endArray = [];
+    }
 
     usersArray.push(location);
     startArray.push(start);
     endArray.push(end);
 
+    console.log('User Array: ', usersArray);
+
     await fetch('http://localhost:3000/update', {
         method: 'PUT',
-        body: JSON.stringify({
-            id: getUserId(),
-            past_searches: usersArray,
-            start_date: startArray,
-            end_date: endArray,
-        }),
         headers: {
             'Content-Type': 'application/json',
         },
+        body: JSON.stringify({
+            id: id,
+            location: usersArray,
+            start: startArray,
+            end: endArray,
+        }),
     })
         .then((res) => res.json())
 
-    for (let i = 0; i < usersArray.length; i++) {
-        const pastSearch = document.createElement("option");
-        const option = usersArray[i];
-        const sDate = startArray[i];
-        const eDate = endArray[i];
+}
 
-        pastSearch.textContent = option + " From: " + sDate + " to " + eDate;
-        pastSearch.value = option;
-        select.appendChild(pastSearch);
+async function loadPastSearches() {
+    const id = getUserId();
+    const uid = id - 1;
+    const users = await getUsers();
+    console.log(users)
+    console.log(users[uid].past_searches);
+    var usersArray = users[uid].past_searches;
+    var startArray = users[uid].start_date;
+    var endArray = users[uid].end_date;
+    const select = document.getElementById('pastDropdown');
+
+    select.innerHTML = '';
+
+    if (usersArray !== null) {
+        for (let i = 0; i < usersArray.length; i++) {
+            const pastSearch = document.createElement("option");
+            const option = usersArray[i];
+            const sDate = startArray[i];
+            const eDate = endArray[i];
+
+            pastSearch.textContent = option + " From: " + sDate + " to " + eDate;
+            pastSearch.value = option;
+            select.appendChild(pastSearch);
+        }
     }
 }
+
+window.onload = loadPastSearches;
+
 
 //Add location search into database
 //Only store city because you already have timestamp
@@ -172,7 +204,9 @@ async function fetchAirQualityData() {
 
         var airQualityData = await fetchPollutantData(lat, lon, selectedPollutants, startDate, endDate);
 
-        updatePastSearches();
+        console.log(location);
+        updatePastSearches(location, startDate, endDate);
+        loadPastSearches();
         updateChart(airQualityData, selectedPollutants, startDate, endDate);
     } catch (error) {
         console.error("Error fetching data:", error);

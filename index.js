@@ -12,7 +12,7 @@ const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS
 const supabase = supabaseClient.createClient(supabaseUrl, supabaseKey)
 
 app.get('/', (req, res) => {
-    res.sendFile('public/LoginPage.html', { root: __dirname})
+    res.sendFile('public/LoginPage.html', { root: __dirname })
 })
 
 app.get('/users', async (req, res) => {
@@ -45,6 +45,30 @@ app.post('/user', async (req, res) => {
         username: userName,
         user_password: password,
     })
+        .select()
+
+    if (error) {
+        console.log('Error:', error)
+        res.send(error)
+    }
+    else {
+        console.log('Successfully retrieved data')
+        res.send(data)
+    }
+})
+
+app.put('/update', async (req, res) => {
+    console.log('Updating user')
+    console.log(req.body)
+
+    const id = req.body.id
+    const location = req.body.location
+    const date = req.body.date;
+
+    const { data, error } = await supabase
+        .from('users')
+        .update({ past_searches: location, search_date: date, })
+        .eq('id', id)
         .select()
 
     if (error) {

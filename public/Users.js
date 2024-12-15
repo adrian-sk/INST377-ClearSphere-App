@@ -1,3 +1,4 @@
+
 async function createUser() {
     console.log('Create User')
     await fetch('http://localhost:3000/user', {
@@ -34,6 +35,7 @@ async function checkUser() {
     for (let i = 0; i < users.length; i++) {
         if (usernameInput == users[i].username && passwordInput == users[i].user_password) {
             isUser = true;
+            updateUserId(users[i].id);
             break;
         }
     }
@@ -44,4 +46,10 @@ async function checkUser() {
     else{
         alert("Incorrect Username or Password");
     }
+
 }
+function updateUserId(id){
+    sessionStorage.setItem('userId', id);
+    console.log('User ID is: ', id);
+}
+

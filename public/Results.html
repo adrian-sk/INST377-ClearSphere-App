@@ -4,90 +4,104 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Air Quality Dashboard</title>
-    <link rel="stylesheet" href="results.css">
-    <script type="text/javascript" src="Users.js" defer></script>
-    <script type="text/javascript" src="results.js" defer></script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.Default.css" />
+    <link rel="stylesheet" href="results.css">
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-
+    <script src="https://unpkg.com/leaflet.markercluster/dist/leaflet.markercluster.js"></script>
+    <script src="leaflet-heat.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://bernii.github.io/gauge.js/dist/gauge.min.js"></script>
     <style>
         #map {
-            height: 400px;
+            height: 500px;
             width: 100%;
-            border: 1px solid #ccc;
+            position: relative;
+        }
+
+        .gauge-container {
+            position: absolute;
+            top: 200px;
+            right: 175px;
+            width: 100px;
+            height: 100px;
+            z-index: 1001;
+            border-radius: 50%;
+            padding: 0;
+            display: flex;
+        }
+
+        .checkbox-container {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            z-index: 1000;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        .checkbox-container input {
+            margin-right: 5px;
         }
     </style>
 </head>
+
 <body>
-    
     <nav class="navbar">
         <ul class="nav-links">
             <li><a href="HomePage.html">Home</a></li>
-            <li><a href="HelpPage.html">Help Page</a></li>
+            <li><a href="results4.html">Results</a></li>
             <li><a href="AboutUs.html">About Us</a></li>
+            <li><a href="HelpPage.html">Help Page</a></li>
+           
         </ul>
     </nav>
 
-    
+    <div class="checkbox-container">
+        <h3>Select Pollutants</h3>
+        <label><input type="checkbox" id="so2" value="so2" checked> SO2</label><br>
+        <label><input type="checkbox" id="no2" value="no2" checked> NO2</label><br>
+        <label><input type="checkbox" id="co" value="co" checked> CO</label><br>
+        <label><input type="checkbox" id="pm25" value="pm2_5" checked> PM2.5</label><br>
+    </div>
+
     <div class="container">
         <div class="search-container">
-            <input
-                type="text"
-                placeholder="Enter Location"
-                id="location-search"
-                class="search-bar"
-                oninput="showSuggestions()"
-            >
+            <input type="text" placeholder="Enter Location" id="location-search" class="search-bar" oninput="filterCities()">
             <div class="suggestions" id="suggestions">
-                <ul>
-                    <li onclick="selectSuggestion('Houston')">Houston</li>
-                    <li onclick="selectSuggestion('Bowie')">Bowie</li>
-                    <li onclick="selectSuggestion('Washington D.C.')">Washington D.C.</li>
-                </ul>
+                <ul></ul>
             </div>
         </div>
 
-        
         <div id="map"></div>
 
-        
         <div class="pollutants">
             <h3>Select Pollutants</h3>
-            <label><input type="checkbox" id="co2" value="co2"> CO2</label>
+            <label><input type="checkbox" id="so2" value="so2"> SO2</label>
             <label><input type="checkbox" id="no2" value="no2"> NO2</label>
             <label><input type="checkbox" id="co" value="co"> CO</label>
             <label><input type="checkbox" id="pm25" value="pm2_5"> PM2.5</label>
             <button onclick="selectAllPollutants()">Select All</button>
         </div>
 
-        
         <div class="calendar-section">
             <h3>Select Start & End Dates</h3>
             <input type="date" id="start-date">
             <input type="date" id="end-date">
         </div>
 
-        
         <div class="chart-container">
             <canvas id="pollutant-chart"></canvas>
         </div>
 
-
-        <div class="dial-container">
-            <div class="dial">
-                <span class="dial-value">75</span>
-            </div>
-            <p>Air Quality Index</p>
-        </div>
-
-        
         <div class="actions">
-            <select id="pastDropdown">
+            <select>
                 <option>Past Searches</option>
             </select>
-            <button onclick="getSearchInfo()">Get Past Search</button>
-            <button class="button-66" role="button" onclick="fetchAirQualityData()">Generate Graph</button>
+            <button class="button-66" role="button" onclick="generateGraph()">Generate Graph</button>
         </div>
 
         <footer>
@@ -95,13 +109,337 @@
         </footer>
     </div>
 
-    <!--<script src="results.js"></script> -->
+    <!-- Gauges for NO2, SO2, CO, and PM2.5 -->
+    <div class="gauge-container" id="gauge-container">
+        <canvas id="gauge"></canvas>
+        <p>Air Quality Index</p>
+    </div>
+
+    <div class="gauge-container" id="gauge-container-so2">
+        <canvas id="gauge-so2"></canvas>
+        <p>SO2</p>
+    </div>
+
+    <div class="gauge-container" id="gauge-container-co">
+        <canvas id="gauge-co"></canvas>
+        <p>CO</p>
+    </div>
+    
+    <div class="gauge-container" id="gauge-container-pm25">
+        <canvas id="gauge-pm25"></canvas>
+        <p>PM2.5</p>
+    </div>
+
     <script>
+        let cityData = [];
+        let selectedLat, selectedLon;
+        const maxVisibleSuggestions = 5;
+        const apiKey = "16887fafcd130b5e54f78f627dbbb936"; // Your API key
+        let chartInstance = null; // Keep track of the chart instance
+        let gauge = null; // To store the gauge instance
+        let gaugeSO2 = null, gaugeCO = null, gaugePM25 = null;
+        const heatmaps = {
+            no2: null,
+            so2: null,
+            co: null,
+            pm25: null
+        };
+
+        // Initialize the map first
         var map = L.map('map').setView([39.82, -98.58], 5);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             maxZoom: 19,
             attribution: '© OpenStreetMap contributors'
         }).addTo(map);
+
+        var markers = L.markerClusterGroup();
+        const heatData = [];
+
+        fetch('cityStatetoLatLong.json')
+            .then(response => response.json())
+            .then(data => {
+                cityData = data; // Store city data for searching
+                data.forEach(city => {
+                    const lat = city.latitude;
+                    const lon = city.longitude;
+                    const cityName = city.city;
+                    const stateName = city.state;
+
+                    const airPollutionUrl = `https://api.openweathermap.org/data/2.5/air_pollution?lat=${lat}&lon=${lon}&appid=${apiKey}`;
+                    const marker = L.marker([lat, lon])
+                        .bindTooltip(`${cityName}, ${stateName}`) // Show city, state on hover
+                        .on('click', () => fetchAirQualityData(lat, lon, cityName, stateName)); // Fetch air quality on click
+                    markers.addLayer(marker);
+                });
+                map.addLayer(markers); // Add markers after data fetch
+            });
+
+        function filterCities() {
+            const cityInput = document.getElementById('location-search');
+            const suggestionsBox = document.getElementById('suggestions');
+            const suggestionsList = suggestionsBox.querySelector('ul');
+            suggestionsList.innerHTML = '';
+
+            if (cityInput.value.length > 0) {
+                const filteredCities = cityData.filter(entry =>
+                    entry.city.toLowerCase().includes(cityInput.value.toLowerCase())
+                );
+
+                filteredCities.slice(0, 10).forEach(entry => {
+                    const suggestion = document.createElement('li');
+                    suggestion.textContent = `${entry.city}, ${entry.state}`;
+                    suggestion.onclick = () => selectSuggestion(entry);
+                    suggestionsList.appendChild(suggestion);
+                });
+
+                suggestionsBox.style.display = filteredCities.length > 0 ? 'block' : 'none';
+            } else {
+                suggestionsBox.style.display = 'none';
+            }
+        }
+
+        function selectSuggestion(entry) {
+            const cityInput = document.getElementById('location-search');
+            cityInput.value = `${entry.city}, ${entry.state}`;
+            selectedLat = entry.latitude;
+            selectedLon = entry.longitude;
+            document.getElementById('suggestions').style.display = 'none';
+
+            fetchAirQualityData(selectedLat, selectedLon, entry.city, entry.state);
+        }
+
+        async function fetchAirQualityData(lat, lon, cityName, stateName) {
+            try {
+                const response = await fetch(`https://api.openweathermap.org/data/2.5/air_pollution?lat=${lat}&lon=${lon}&appid=${apiKey}`);
+                const data = await response.json();
+
+                const no2Value = data.list[0].components.no2;
+                const so2Value = data.list[0].components.so2;
+                const coValue = data.list[0].components.co;
+                const pm25Value = data.list[0].components.pm2_5;
+
+                const popupContent = `
+                <h3>${cityName}, ${stateName}</h3>
+                <p><strong>NO2:</strong> ${no2Value} µg/m³</p>
+                <p><strong>SO2:</strong> ${so2Value} µg/m³</p>
+                <p><strong>CO:</strong> ${coValue} µg/m³</p>
+                <p><strong>PM2.5:</strong> ${pm25Value} µg/m³</p>`;
+
+                L.popup().setLatLng([lat, lon]).setContent(popupContent).openOn(map);
+                
+
+                const pollutantsData = [
+                    { lat, lon, value: no2Value / 200 * 1, type: 'no2' },
+                    { lat, lon, value: so2Value / 350 * 1, type: 'so2' },
+                    { lat, lon, value: coValue / 15400 * 1, type: 'co' },
+                    { lat, lon, value: pm25Value / 75 * 1, type: 'pm25' },
+                ];
+
+                pollutantsData.forEach(pollutant => {
+                    if (pollutant.value && !isNaN(pollutant.value)) {
+                        addToHeatmap(pollutant);
+                    }
+                });
+
+                updateGauge(no2Value, so2Value, coValue, pm25Value);
+
+            } catch (error) {
+                console.error("Error fetching air quality data:", error);
+                alert("An error occurred while fetching air quality data.");
+            }
+        }
+
+  function selectAllPollutants() {
+            const checkboxes = document.querySelectorAll('.pollutants input[type="checkbox"]');
+            checkboxes.forEach((checkbox) => {
+                checkbox.checked = true;
+            });
+        }
+
+        async function generateGraph() {
+            const startDate = document.getElementById('start-date').value;
+            const endDate = document.getElementById('end-date').value;
+            const selectedPollutants = Array.from(
+                document.querySelectorAll('.pollutants input:checked')
+            ).map(input => input.value);
+
+            if (!selectedLat || !selectedLon) {
+                alert("Please select a valid location!");
+                return;
+            }
+
+            if (!startDate || !endDate || selectedPollutants.length === 0) {
+                alert("Please fill in all fields and select at least one pollutant!");
+                return;
+            }
+
+            if (new Date(startDate) > new Date(endDate)) {
+                alert("End date must be after start date!");
+                return;
+            }
+
+            try {
+                const startTime = new Date(startDate).getTime() / 1000;
+                const endTime = new Date(endDate).getTime() / 1000;
+
+                const response = await fetch(
+                    `https://api.openweathermap.org/data/2.5/air_pollution/history?lat=${selectedLat}&lon=${selectedLon}&start=${startTime}&end=${endTime}&appid=${apiKey}`
+                );
+                const data = await response.json();
+                const airQualityData = processAirQualityData(data, selectedPollutants);
+
+                // Destroy old chart if it exists
+                if (chartInstance) {
+                    chartInstance.destroy();
+                }
+
+                // Create a new chart
+                chartInstance = updateChart(airQualityData, selectedPollutants, startDate, endDate);
+            } catch (error) {
+                console.error("Error fetching data:", error);
+                alert("An error occurred while fetching the data.");
+            }
+        }
+
+        function processAirQualityData(data, pollutants) {
+            const timeSeries = data.list.map(entry => ({
+                date: new Date(entry.dt * 1000).toISOString().split("T")[0],
+                components: entry.components,
+            }));
+
+            return timeSeries.reduce((acc, entry) => {
+                pollutants.forEach(pollutant => {
+                    if (!acc[pollutant]) acc[pollutant] = [];
+                    acc[pollutant].push({ date: entry.date, value: entry.components[pollutant] });
+                });
+                return acc;
+            }, {});
+        }
+
+        function updateChart(airQualityData, pollutants, startDate, endDate) {
+            const labels = airQualityData[pollutants[0]].map(data => data.date);
+
+            const datasets = pollutants.map(pollutant => ({
+                label: pollutant.toUpperCase(),
+                data: airQualityData[pollutant].map(data => data.value),
+                fill: false,
+                borderColor: getRandomColor(),
+            }));
+
+            const ctx = document.getElementById("pollutant-chart").getContext("2d");
+            return new Chart(ctx, {
+                type: "line",
+                data: {
+                    labels,
+                    datasets,
+                },
+                options: {
+                    responsive: true,
+                    title: {
+                        display: true,
+                        text: `Air Quality Data (${startDate} to ${endDate})`,
+                    },
+                    scales: {
+                        x: { title: { display: true, text: "Date" } },
+                        y: { title: { display: true, text: "Pollutant Levels" } },
+                    },
+                },
+            });
+        }
+
+        function getRandomColor() {
+            return `hsl(${Math.floor(Math.random() * 360)}, 70%, 50%)`;
+        }
+
+        function updateGauge(no2Value, so2Value, coValue, pm25Value) {
+            // Initialize gauges if not already done
+            const gaugeOptions = {
+                    angle: 0.15, 
+                    lineWidth: 0.44, 
+                    radiusScale: 1, 
+                    pointer: {
+                        length: 0.7, 
+                        strokeWidth: 0.042, 
+                        color: 'red'
+                    },
+                    limitMax: false,
+                    limitMin: 0,
+                    percentColors: [[0.0, "#00FF00" ], [0.50, "#FFFF00"], [0.75,"#FFA500"], [1.0, "#FF0000"]],
+                    strokeColor: '#E0E0E0',
+                    generateGradient: true
+                };
+            
+            if (!gauge) {
+                const gaugeElement = document.getElementById("gauge");
+                gauge = new Gauge(gaugeElement).setOptions(gaugeOptions);
+                gauge.maxValue = 200; 
+                gauge.setMinValue(0); 
+                gauge.animationSpeed = 32;
+                
+            }
+                gauge.set(no2Value);
+
+            if (!gaugeSO2) {
+                const gaugeElementSO2 = document.getElementById("gauge-so2");
+                gaugeSO2 = new Gauge(gaugeElementSO2).setOptions(gaugeOptions);
+                gaugeSO2.maxValue = 350; 
+                gaugeSO2.setMinValue(0); 
+                gaugeSO2.animationSpeed = 32;
+                
+            }
+                gaugeSO2.set(so2Value);
+
+            if (!gaugeCO) {
+                const gaugeElementCO = document.getElementById("gauge-co");
+                gaugeCO = new Gauge(gaugeElementCO).setOptions(gaugeOptions);
+                gaugeCO.maxValue = 15400; 
+                gaugeCO.setMinValue(0); 
+                gaugeCO.animationSpeed = 32;
+                
+            }
+                gaugeCO.set(coValue);
+
+            if (!gaugePM25) {
+                const gaugeElementPM25 = document.getElementById("gauge-pm25");
+                gaugePM25 = new Gauge(gaugeElementPM25).setOptions(gaugeOptions);
+                gaugePM25.maxValue = 75; 
+                gaugePM25.setMinValue(0); 
+                gaugePM25.animationSpeed = 32;
+            }
+                gaugePM25.set(pm25Value);
+        }
+
+        function addToHeatmap({ lat, lon, value, type }) {
+            const dataPoint = [lat, lon, value];
+
+            if (!heatmaps[type]) {
+                heatmaps[type] = L.heatLayer([], { radius: 25, blur: 15 });
+                map.addLayer(heatmaps[type]);
+            }
+            heatmaps[type].addLatLng(dataPoint);
+        }
+
+        function togglePollutantLayer(pollutantType, isChecked) {
+            if (isChecked) {
+                heatmaps[pollutantType].addTo(map);
+            } else {
+                map.removeLayer(heatmaps[pollutantType]);
+            }
+        }
+
+        document.getElementById('so2').addEventListener('change', (event) => togglePollutantLayer('so2', event.target.checked));
+        document.getElementById('no2').addEventListener('change', (event) => togglePollutantLayer('no2', event.target.checked));
+        document.getElementById('co').addEventListener('change', (event) => togglePollutantLayer('co', event.target.checked));
+        document.getElementById('pm25').addEventListener('change', (event) => togglePollutantLayer('pm25', event.target.checked));
+
+        function selectAllPollutants() {
+            ['so2', 'no2', 'co', 'pm25'].forEach(id => {
+                document.getElementById(id).checked = true;
+                togglePollutantLayer(id, true);
+            });
+        }
+
+
     </script>
 </body>
 </html>

@@ -1,3 +1,5 @@
+/* Existing styles */
+
 body {
     margin: 0;
     padding: 0;
@@ -19,7 +21,7 @@ body {
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
-
+/* Search bar */
 .search-container {
     position: relative;
     margin-bottom: 20px;
@@ -39,6 +41,8 @@ body {
 
 .suggestions {
     position: absolute;
+    overflow-y: auto; /* Adds a vertical scrollbar */
+    max-height: 200px; /* Approx height for 5 items */
     top: 50px;
     left: 0;
     width: 100%;
@@ -50,22 +54,18 @@ body {
     display: none;
 }
 
-.suggestions ul {
-    list-style: none;
-    padding: 10px;
-    margin: 0;
-}
-
 .suggestions li {
     padding: 10px;
     text-align: left;
     cursor: pointer;
+    overflow: hidden;
 }
 
 .suggestions li:hover {
     background-color: #f0f0f0;
 }
 
+/* Map container */
 .map-container {
     margin: 20px 0;
     text-align: center;
@@ -77,6 +77,7 @@ body {
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
+/* Pollutants section */
 .pollutants {
     margin: 20px 0;
     padding: 10px;
@@ -96,6 +97,7 @@ body {
     font-size: 14px;
 }
 
+/* Calendar section */
 .calendar-section {
     margin: 20px 0;
     padding: 10px;
@@ -113,6 +115,7 @@ body {
     border-radius: 5px;
 }
 
+/* Data section */
 .data-section {
     display: flex;
     justify-content: space-between;
@@ -124,6 +127,7 @@ body {
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
+/* Graph container */
 .chart-container {
     width: 60%;
 }
@@ -153,24 +157,29 @@ body {
     color: #777;
 }
 
+/* Dial container */
 .dial-container {
-    width: 35%;
-    text-align: center;
-}
+    width: 80px; /* Adjust the size to fit inside the gauge container */
+    height: 80px; /* Adjust the size to fit inside the gauge container */
+    display: flex;
+    justify-content: center; /* Center align content horizontally */
+    align-items: center; /* Center align content vertically */
+} 
 
 .dial {
     border: 4px solid #ccc;
     border-radius: 50%;
-    width: 80px;
-    height: 80px;
+    width: 80px; /* Same as the dial container */
+    height: 80px; /* Same as the dial container */
     display: flex;
     justify-content: center;
     align-items: center;
     font-size: 18px;
     font-weight: bold;
-    margin: 0 auto;
+    background-color: #fff; /* Optional, to ensure visibility */
 }
 
+/* Footer */
 footer {
     text-align: center;
     margin-top: 20px;
@@ -178,6 +187,7 @@ footer {
     color: #777;
 }
 
+/* Navbar */
 .navbar {
     background-color: #0047ab; 
     padding: 15px 0;
@@ -217,6 +227,41 @@ body {
     margin-top: 80px; 
 }
 
+/* Meter styles */
+#foo {
+    position: absolute;
+    top: 175px; /* Adjust the position on the map */
+    right: 50px; /* Adjust the position on the map */
+    width: 100px;
+    height: 100px;
+}
+
+.wrap {
+    position: absolute;
+    top: 210px;
+    left: 50px;
+}
+
+.zero {
+    position: absolute;
+    top: 180px;
+    left: 70px;
+}
+
+.twohundred {
+    position: absolute;
+    top: 180px;
+    left: 310px;
+}
+
+#no2-value {
+    position: absolute;
+    top: 300px;
+    left: 50px;
+    font-size: 20px;
+    color: #333;
+}
+
 .button-66 {
     background-color: #0a6bff;
     border-radius: 4px;
@@ -253,4 +298,30 @@ body {
       padding: 16px 44px;
       min-width: 150px;
     }
-  }
+}
+
+#gauge-container-so2 {
+    position: absolute;
+    top: 335px; /* Adjust to be under NO2 */
+    right: 175px;
+    z-index: 2000;
+}
+
+#gauge-container-co {
+    position: absolute;
+    top: 470px; /* Adjust to be under SO2 */
+    right: 175px;
+    z-index: 2000;
+}
+
+#gauge-container-pm25 {
+    position: absolute;
+    top: 605px; /* Adjust to be under CO */
+    right: 175px;
+    z-index: 2000;
+}
+
+
+
+
+

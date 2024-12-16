@@ -3,7 +3,7 @@
 ## **Description**
 The **Clear Sphere App** is a web-based tool designed to provide users with real-time and historical air quality data. Users can input a location on the Home Page and be directed to the Results Page, where they can analyze pollutant-specific heatmaps, historical air quality trends, and other environmental insights. Additional pages include a Help Page with educational resources and an About Us Page detailing the purpose and team behind the project.
 
-The app is designed to empower users with actionable insights about air quality, enabling them to make informed decisions about their environment and health.
+The app is designed to empower users with insights about air quality, enabling them to make informed decisions about their environment and health.
 
 ---
 
@@ -153,12 +153,6 @@ Jump directly to the [Developer Manual](#developer-manual).
     ```
 ---
 
----
-
-### **Known Bugs**
-- Heatmap occasionally doesn’t refresh after toggling pollutants.
-- Intermittent API call failures due to rate limits from OpenWeatherMap.
--Any searches done on the home page will not appear on the past searches. You will have to only do searches from within the results page to see the past searches.
 ---
 
 ### **Future Development**

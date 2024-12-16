@@ -40,14 +40,14 @@ async function getSearchInfo() {
     const users = await getUsers();
     var start;
     var end;
-    const apiKey = "16887fafcd130b5e54f78f627dbbb936";
     var selected = document.querySelector('#pastDropdown');
     var location = selected.value;
+    console.log(location);
 
-    var lat;
-    var long;
+    // var lat;
+    // var long;
 
-    fetch('cityStateToLatLong.json')
+    /*fetch('cityStateToLatLong.json')
         .then((res) => res.json())
         .then(response => {
             console.log(response);
@@ -61,7 +61,7 @@ async function getSearchInfo() {
                 }
             }
         })
-
+    */
     var selectedPollutants = Array.from(
         document.querySelectorAll('.pollutants input:checked')
     ).map(input => input.value);
@@ -71,19 +71,37 @@ async function getSearchInfo() {
         return;
     }
 
-    var pastArray = users[uid].past_searches;
-    for (let i = 0; i < pastArray.length; i++) {
-        if (location == pastArray[i]) {
-            start = users[uid].start_date[i];
-            end = users[uid].end_date[i];
-            break;
+    try {
+        var geoResponse = await fetch(
+            `https://api.openweathermap.org/geo/1.0/direct?q=${location}&limit=1&appid=${apiKey}`
+        );
+        var geoData = await geoResponse.json();
+
+        if (!geoData.length) {
+            alert("Invalid location!");
+            return;
         }
+
+        var { lat, lon } = geoData[0];
+
+        var pastArray = users[uid].past_searches;
+        for (let i = 0; i < pastArray.length; i++) {
+            if (location == pastArray[i]) {
+                start = users[uid].start_date[i];
+                end = users[uid].end_date[i];
+                console.log(start);
+                console.log(end);
+                break;
+            }
+        }
+
+        var airQualityData = await fetchPollutantData(lat, lon, selectedPollutants, start, end);
+        updateChart(airQualityData, selectedPollutants, start, end);
+    } catch (error) {
+        console.error("Error fetching data:", error);
+        alert("An error occurred while fetching the data.");
     }
-
-    var airQualityData = await fetchPollutantData(lat, long, selectedPollutants, start, end);
-    updateChart(airQualityData, selectedPollutants, start, end);
 }
-
 function getUserId() {
     const userId = sessionStorage.getItem('userId');
     console.log('Id: ', userId);

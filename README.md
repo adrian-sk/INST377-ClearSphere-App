@@ -23,48 +23,29 @@ Jump directly to the [Developer Manual](#developer-manual).
 
 ### **Installation Instructions**
 
-1. **Clone the Repository**:
-   ```bash
-   git clone https://github.com/your-repository/clear-sphere-app.git
-   cd clear-sphere-app
-   ```
+1. **Install Dependencies**:
+  -First install nvm in order to install node.js
+  -Install node using nvm install node
+  -Then npm init to create 'package.json'
+  -
 
-2. **Install Dependencies**:
-   Ensure Node.js and npm are installed, then run:
-   ```bash
-   npm install
-   ```
+2. **Set Up the Backend**:
+   - Create a `index.js` file or use an existing Node.js server to handle API requests.
+   -Install expressjs: npm install express
+   -Install nodemon: npm install nodemon
+   -Install supabase: npm install @supabase/supabase-js
 
-3. **Set Up the Backend**:
-   - Create a `server.js` file or use an existing Node.js server to handle API requests.
-   - Install required packages:
-     ```bash
-     npm install express body-parser dotenv
-     ```
-
-4. **Set Up Environment Variables**:
-   Create a `.env` file in the root directory and add:
-   ```plaintext
-   OPENWEATHERMAP_API_KEY=16887fafcd130b5e54f78f627dbbb936
-   ```
-
-5. **Start the Backend Server**:
-   ```bash
-   node server.js
-   ```
 
 ---
 
 ### **Running the Application**
 
 1. **Start the Frontend**:
-   - Use a local server (e.g., `Live Server` in VS Code) or deploy the app.
-   - Open `HomePage.html` in a browser to start.
+   - Use vercel link to access webpage:
+   - https://clear-sphere-git-main-javi-l03s-projects.vercel.app/
 
-2. **Access the Backend**:
-   Ensure the backend server is running locally or deployed.
 
-3. **Navigate the App**:
+2. **Navigate the App**:
    - Input a location on the Home Page to access the Results Page.
    - Use other pages like About Us, Help, Login, and Create Account for additional functionality.
 
@@ -87,7 +68,23 @@ Jump directly to the [Developer Manual](#developer-manual).
 
 ### **API Reference**
 
-#### **1. Create a New User**
+
+#### **1. Load login screen**
+- **Endpoint**: `GET /`
+- **Description**: Get the first page
+- **Headers**:
+  - None
+- **Response**:
+  - **Success (200)**:
+    ```json
+    { "success": true }
+    ```
+  - **Error (400)**:
+    ```json
+    { "error": "error" }
+    ```
+
+#### **2. Create a New User**
 - **Endpoint**: `POST /user`
 - **Description**: Creates a new user account in the system.
 - **Headers**:
@@ -112,7 +109,7 @@ Jump directly to the [Developer Manual](#developer-manual).
 
 ---
 
-#### **2. Fetch All Users**
+#### **3. Fetch All Users**
 - **Endpoint**: `GET /users`
 - **Description**: Retrieves a list of all registered users.
 - **Headers**: None.
@@ -133,86 +130,35 @@ Jump directly to the [Developer Manual](#developer-manual).
       }
     ]
     ```
-
----
-
-#### **3. User Authentication**
-- **Endpoint**: `POST /auth`
-- **Description**: Verifies user credentials and logs them into the system.
-- **Headers**:
-  - `Content-Type: application/json`
+#### **4. Update user past searches and start and end dates**
+- **Endpoint**: `PUT /update`
+- **Description**: Updates user past searches and start and end dates in supabase
 - **Request Body**:
   ```json
   {
-    "userName": "john_doe",
-    "password": "securepassword123"
+    "id": "3",
+    "location": "Houston",
+    "start": "11/11/2024",
+    "end": "11/12/2024"
   }
   ```
 - **Response**:
   - **Success (200)**:
     ```json
-    { "authenticated": true, "redirect": "HomePage.html" }
-    ```
-  - **Error (401)**:
-    ```json
-    { "authenticated": false, "message": "Invalid username or password" }
-    ```
-
----
-
-#### **4. Fetch Geolocation Data**
-- **Endpoint**: `GET /geo`
-- **Description**: Fetches latitude and longitude for a user-provided location.
-- **Query Parameters**:
-  - `q` (string): The location name (e.g., "Miami").
-- **Response**:
-  - **Success (200)**:
-    ```json
-    {
-      "lat": 40.7128,
-      "lon": -74.0060
-    }
-    ```
-  - **Error (404)**:
-    ```json
-    { "error": "Location not found" }
-    ```
-
----
-
-#### **5. Fetch Air Quality Data**
-- **Endpoint**: `GET /air_pollution`
-- **Description**: Retrieves air quality data for a specified location and date range.
-- **Headers**: None.
-- **Query Parameters**:
-  - `lat` (float): Latitude of the location.
-  - `lon` (float): Longitude of the location.
-  - `start` (integer): Start date as a UNIX timestamp.
-  - `end` (integer): End date as a UNIX timestamp.
-- **Response**:
-  - **Success (200)**:
-    ```json
-    {
-      "location": "New York",
-      "pollutants": {
-        "no2": [12, 15, 14],
-        "co": [0.7, 0.6, 0.8],
-        "o3": [20, 22, 25],
-        "pm2_5": [35, 40, 45]
-      }
-    }
+    { "success": true }
     ```
   - **Error (400)**:
     ```json
-    { "error": "Invalid parameters" }
+    { "error": "Invalid input" }
     ```
+---
 
 ---
 
 ### **Known Bugs**
 - Heatmap occasionally doesn’t refresh after toggling pollutants.
 - Intermittent API call failures due to rate limits from OpenWeatherMap.
-
+-Any searches done on the home page will not appear on the past searches. You will have to only do searches from within the results page to see the past searches.
 ---
 
 ### **Future Development**

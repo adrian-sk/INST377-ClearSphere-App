@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html>
+    <title>Air Quality Levels</title>
+    <head>
+        <script src="https://bernii.github.io/gauge.js/dist/gauge.min.js"></script>
+        
+        <style>
+            * {
+                margin: 0;
+                padding: 0;
+            }
+
+            body {
+                font-family: Arial, sans-serif;
+            }
+
+            h1 {
+                text-align: center;
+                margin-top: 20px;
+            }
+
+            .gauge-container {
+                display: flex;
+                flex-wrap: wrap;
+                justify-content: space-evenly;
+                align-items: center;
+                margin: 20px auto;
+                max-width: 800px;
+            }
+
+            .gauge-box {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                margin: 20px;
+                flex-basis: 45%;
+            }
+
+            .gauge-label {
+                text-align: center;
+                font-size: 18px;
+                margin-top: 10px;
+            }
+
+            #data-values {
+                text-align: center;
+                font-size: 20px;
+                margin-top: 20px;
+                color: #333;
+            }
+
+            button {
+                display: block;
+                margin: 20px auto;
+                padding: 10px 20px;
+                font-size: 16px;
+                cursor: pointer;
+            }
+        </style>
+    </head>
+    
+    <body>
+        <h1>Air Quality Levels</h1>
+
+        <button onclick="fetchData()">Fetch Air Quality Data</button>
+
+        <div class="gauge-container">
+            <div class="gauge-box">
+                <canvas id="no2"></canvas>
+                <div class="gauge-label">NO<sub>2</sub> (µg/m³)</div>
+            </div>
+            <div class="gauge-box">
+                <canvas id="co"></canvas>
+                <div class="gauge-label">CO (µg/m³)</div>
+            </div>
+            <div class="gauge-box">
+                <canvas id="pm25"></canvas>
+                <div class="gauge-label">PM2.5 (µg/m³)</div>
+            </div>
+            <div class="gauge-box">
+                <canvas id="co2"></canvas>
+                <div class="gauge-label">CO₂ (ppm)</div>
+            </div>
+        </div>
+
+        <div id="data-values">Air Quality Levels: Loading...</div>
+
+        <script>
+            const opts = {
+                lines: 12,
+                angle: 0,
+                lineWidth: 0.4,
+                pointer: {
+                    length: 0.6,
+                    strokeWidth: 0.04,
+                    color: 'red'
+                },
+                limitMax: false,
+                strokeColor: '#E0E0E0',
+                generateGradient: true
+            };
+
+            const no2Gauge = new Gauge(document.getElementById('no2')).setOptions(opts);
+            const coGauge = new Gauge(document.getElementById('co')).setOptions(opts);
+            const pm25Gauge = new Gauge(document.getElementById('pm25')).setOptions(opts);
+            const co2Gauge = new Gauge(document.getElementById('co2')).setOptions(opts);
+
+            no2Gauge.maxValue = 200;
+            coGauge.maxValue = 10000;
+            pm25Gauge.maxValue = 500;
+            co2Gauge.maxValue = 5000;
+
+            [no2Gauge, coGauge, pm25Gauge, co2Gauge].forEach(gauge => {
+                gauge.minValue = 0;
+                gauge.animationSpeed = 32;
+            });
+
+            function setGaugeColor(gauge, value, max) {
+                const percentage = (value / max) * 100;
+                let color;
+
+                if (percentage <= 25) {
+                    color = '#00FF00';
+                } else if (percentage <= 50) {
+                    color = '#FFFF00';
+                } else if (percentage <= 75) {
+                    color = '#FFA500';
+                } else {
+                    color = '#FF0000';
+                }
+                gauge.setOptions({ ...opts, colorStart: color, colorStop: color });
+            }
+
+            function fetchData() { 
+                const apiKey = '16887fafcd130b5e54f78f627dbbb936';
+                const lat = 38.9072;
+                const lon = -77.0369;
+                const apiUrl = `https://api.openweathermap.org/data/2.5/air_pollution?lat=${lat}&lon=${lon}&appid=${apiKey}`;
+                
+                fetch(apiUrl)
+                .then(response => {
+                    if (!response.ok) throw new Error('Network response was not ok ' + response.statusText);
+                    return response.json();
+                })
+                .then(data => {
+                    const { co, no2, pm2_5 } = data.list[0].components;
+
+                    setGaugeColor(no2Gauge, no2, 200);
+                    no2Gauge.set(no2);
+
+                    setGaugeColor(coGauge, co, 10000);
+                    coGauge.set(co);
+
+                    setGaugeColor(pm25Gauge, pm2_5, 500);
+                    pm25Gauge.set(pm2_5);
+
+                    setGaugeColor(co2Gauge, 400, 5000);
+                    co2Gauge.set(400);
+
+                    document.getElementById('data-values').innerHTML = `
+                        NO₂: ${no2} µg/m³ | CO: ${co} µg/m³ | PM2.5: ${pm2_5} µg/m³ | CO₂: 400 ppm
+                    `;
+                })
+                .catch(error => console.error('Error fetching data:', error));
+            }
+        </script>
+    </body>
+</html>
